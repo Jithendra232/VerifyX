@@ -1,0 +1,60 @@
+import {
+  DashboardAction,
+  DashboardError,
+  DashboardLoading,
+  DashboardPage,
+  Panel,
+  QuickActionGrid,
+  SimpleTable,
+  StatsGrid,
+} from "../../components/dashboard/DashboardUI";
+import { useDashboard } from "../../hooks/useDashboard";
+
+function CustomerDashboard() {
+  const { data, loading, error } = useDashboard("customer");
+
+  if (loading) return <DashboardLoading />;
+  if (error) return <DashboardError message={error} />;
+
+  const stats = data?.stats || {};
+
+  return (
+    <DashboardPage
+      title="Customer Product Wallet"
+      subtitle="Review your owned products and verification history."
+      actions={<DashboardAction label="Verify a Product" to="/verify" variant="solid" />}
+    >
+      <StatsGrid
+        items={[
+          { label: "Owned Products", value: stats.ownedProductsCount || 0, helper: "Linked to your account", tone: "bg-blue-500" },
+          { label: "Verified", value: stats.verifiedProductsCount || 0, helper: "Confirmed authentic", tone: "bg-emerald-500" },
+          { label: "Suspicious Scans", value: stats.suspiciousScansCount || 0, helper: "Needs attention", tone: "bg-red-500" },
+          { label: "Visible Products", value: data?.ownedProducts?.length || 0, helper: "Shown in this wallet", tone: "bg-indigo-500" },
+        ]}
+      />
+
+      <QuickActionGrid
+        items={[
+          { title: "Verify a Product", description: "Scan QR codes or enter a product ID manually.", to: "/verify" },
+          { title: "Review Wallet", description: "See products currently linked to your account.", to: "/dashboard/customer" },
+          { title: "Check Suspicious Scans", description: "Re-verify products that may need investigation.", to: "/dashboard/customer" },
+        ]}
+      />
+
+      <Panel title="Owned Products" subtitle="Current products linked to your account.">
+        <SimpleTable
+          columns={[
+            { key: "productName", header: "Product", render: (row) => row.productName || "-" },
+            { key: "batchNumber", header: "Batch", render: (row) => row.batchNumber || "-" },
+            { key: "verificationStatus", header: "Status", render: (row) => row.verificationStatus || "-" },
+          ]}
+          rows={(data?.ownedProducts || []).map((item) => ({ ...item, id: item._id }))}
+          emptyTitle="No owned products"
+          emptyDescription="Once a transfer is completed to your account, products will appear here."
+        />
+      </Panel>
+    </DashboardPage>
+  );
+}
+
+export default CustomerDashboard;
