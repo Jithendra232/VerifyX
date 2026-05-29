@@ -2,15 +2,18 @@ import { useEffect, useState } from "react";
 import { useDashboard } from "../../hooks/useDashboard";
 import { fetchHighRiskProducts } from "../../services/riskService";
 import { useAuthSync } from "../../context/AuthSyncContext";
+import AnalyticsEnhancement from "../../components/dashboard/AnalyticsEnhancement";
 import {
   DashboardAction,
   DashboardError,
   DashboardLoading,
   DashboardPage,
+  AnalyticsGrid,
   Panel,
   QuickActionGrid,
   SimpleTable,
   StatsGrid,
+  StatusBadge,
 } from "../../components/dashboard/DashboardUI";
 
 function AdminDashboard() {
@@ -43,6 +46,7 @@ function AdminDashboard() {
   if (error) return <DashboardError message={error} />;
 
   const stats = data?.stats || {};
+  const activityCount = data?.recentActivities?.length || 0;
 
   return (
     <DashboardPage
@@ -67,13 +71,41 @@ function AdminDashboard() {
         ]}
       />
 
+      <AnalyticsGrid
+        charts={[
+          {
+            title: "Platform Overview",
+            subtitle: "Current product, transfer, and risk distribution.",
+            type: "bar",
+            data: [
+              { name: "Products", value: stats.totalProducts || 0 },
+              { name: "Transfers", value: stats.totalTransfers || 0 },
+              { name: "Users", value: stats.totalUsers || 0 },
+              { name: "Risk", value: highRisk.length },
+            ],
+          },
+          {
+            title: "Risk Overview",
+            subtitle: "High-level health of monitored products.",
+            type: "pie",
+            data: [
+              { name: "Normal", value: Math.max((stats.totalProducts || 0) - highRisk.length, 0), color: "#10b981" },
+              { name: "Risk Alerts", value: highRisk.length, color: "#ef4444" },
+              { name: "Recent Activity", value: activityCount, color: "#2563eb" },
+            ],
+          },
+        ]}
+      />
+
+      <AnalyticsEnhancement />
+
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
         <Panel title="Recent Platform Activity" subtitle="Latest operational events across the network.">
           <SimpleTable
             columns={[
               { key: "type", header: "Type", render: (row) => row.type || "-" },
               { key: "label", header: "Event", render: (row) => row.label || "-" },
-              { key: "status", header: "Status", render: (row) => row.status || "-" },
+              { key: "status", header: "Status", render: (row) => <StatusBadge tone="info">{row.status || "-"}</StatusBadge> },
             ]}
             rows={(data?.recentActivities || []).map((item, idx) => ({ ...item, id: `${item.type}-${idx}` }))}
             emptyTitle="No activity yet"
@@ -86,7 +118,7 @@ function AdminDashboard() {
             columns={[
               { key: "productName", header: "Product", render: (row) => row.productName || "-" },
               { key: "batchNumber", header: "Batch", render: (row) => row.batchNumber || "-" },
-              { key: "riskScore", header: "Risk Score", render: (row) => row.riskScore ?? "-" },
+              { key: "riskScore", header: "Risk Score", render: (row) => <StatusBadge tone="danger">{row.riskScore ?? "-"}</StatusBadge> },
             ]}
             rows={(highRisk || []).slice(0, 10).map((item) => ({ ...item, id: item.productId }))}
             emptyTitle="No high-risk products"

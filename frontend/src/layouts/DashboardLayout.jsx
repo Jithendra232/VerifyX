@@ -1,6 +1,7 @@
 import { Outlet } from "react-router-dom";
 import DashboardUserButton from "../components/auth/DashboardUserButton";
 import Sidebar from "../components/common/Sidebar";
+import NotificationCenter from "../components/notifications/NotificationCenter";
 import { useAppUser } from "../hooks/useAppUser";
 
 function DashboardLayout() {
@@ -16,7 +17,10 @@ function DashboardLayout() {
               <p className="text-sm font-semibold text-slate-900">Supply Chain Dashboard</p>
               <p className="text-xs text-slate-500">{mongoUser?.name || "User"}</p>
             </div>
-            <DashboardUserButton />
+            <div className="flex items-center gap-3">
+              <NotificationCenter />
+              <DashboardUserButton />
+            </div>
           </div>
         </header>
         <main className="p-4 md:p-6">

@@ -3,11 +3,14 @@ import {
   DashboardError,
   DashboardLoading,
   DashboardPage,
+  AnalyticsGrid,
   Panel,
   QuickActionGrid,
   SimpleTable,
   StatsGrid,
+  StatusBadge,
 } from "../../components/dashboard/DashboardUI";
+import AnalyticsEnhancement from "../../components/dashboard/AnalyticsEnhancement";
 import { useDashboard } from "../../hooks/useDashboard";
 
 function CustomerDashboard() {
@@ -41,12 +44,29 @@ function CustomerDashboard() {
         ]}
       />
 
+      <AnalyticsGrid
+        charts={[
+          {
+            title: "Verification Health",
+            subtitle: "Owned, verified, and suspicious product signals.",
+            type: "pie",
+            data: [
+              { name: "Verified", value: stats.verifiedProductsCount || 0, color: "#10b981" },
+              { name: "Suspicious", value: stats.suspiciousScansCount || 0, color: "#ef4444" },
+              { name: "Owned", value: stats.ownedProductsCount || 0, color: "#2563eb" },
+            ],
+          },
+        ]}
+      />
+
+      <AnalyticsEnhancement />
+
       <Panel title="Owned Products" subtitle="Current products linked to your account.">
         <SimpleTable
           columns={[
             { key: "productName", header: "Product", render: (row) => row.productName || "-" },
             { key: "batchNumber", header: "Batch", render: (row) => row.batchNumber || "-" },
-            { key: "verificationStatus", header: "Status", render: (row) => row.verificationStatus || "-" },
+            { key: "verificationStatus", header: "Status", render: (row) => <StatusBadge tone="success">{row.verificationStatus || "-"}</StatusBadge> },
           ]}
           rows={(data?.ownedProducts || []).map((item) => ({ ...item, id: item._id }))}
           emptyTitle="No owned products"

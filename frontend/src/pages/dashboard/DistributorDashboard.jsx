@@ -3,11 +3,13 @@ import {
   DashboardError,
   DashboardLoading,
   DashboardPage,
+  AnalyticsGrid,
   Panel,
   QuickActionGrid,
   SimpleTable,
   StatsGrid,
 } from "../../components/dashboard/DashboardUI";
+import AnalyticsEnhancement from "../../components/dashboard/AnalyticsEnhancement";
 import { useDashboard } from "../../hooks/useDashboard";
 
 function DistributorDashboard() {
@@ -40,6 +42,25 @@ function DistributorDashboard() {
           { title: "Prepare Transfers", description: "Use custody records to validate outbound movement.", to: "/dashboard/distributor" },
         ]}
       />
+
+      <AnalyticsGrid
+        charts={[
+          {
+            title: "Inventory Movement",
+            subtitle: "Inbound, outbound, and owned product counts.",
+            type: "bar",
+            color: "#2563eb",
+            data: [
+              { name: "Inventory", value: stats.inventoryCount || 0 },
+              { name: "Received", value: stats.receivedTransfersCount || 0 },
+              { name: "Outgoing", value: stats.outgoingTransfersCount || 0 },
+              { name: "Listed", value: data?.productsCurrentlyOwned?.length || 0 },
+            ],
+          },
+        ]}
+      />
+
+      <AnalyticsEnhancement />
 
       <Panel title="Products Currently Owned" subtitle="Current inventory under your custody.">
         <SimpleTable

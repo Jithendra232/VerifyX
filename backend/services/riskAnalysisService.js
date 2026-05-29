@@ -2,7 +2,12 @@ const Product = require("../models/Product");
 const VerificationLog = require("../models/VerificationLog");
 const Transfer = require("../models/Transfer");
 const User = require("../models/User");
-const { calculateRiskLevel, capRiskScore, uniqueReasons } = require("../utils/riskHelpers");
+const {
+  calculateRiskLevel,
+  capRiskScore,
+  getRiskThresholds,
+  uniqueReasons,
+} = require("../utils/riskHelpers");
 const { isValidObjectId } = require("../utils/objectIdUtils");
 
 /**
@@ -11,6 +16,7 @@ const { isValidObjectId } = require("../utils/objectIdUtils");
  * @returns {object} { score: number, reason: string|null, count: number }
  */
 const analyzeFakeScans = (logs) => {
+  const thresholds = getRiskThresholds();
   const fakeScanCount = logs.filter(
     (log) => log.result === "FAKE"
   ).length;
@@ -18,10 +24,10 @@ const analyzeFakeScans = (logs) => {
   let score = 0;
   let reason = null;
 
-  if (fakeScanCount >= 5) {
+  if (fakeScanCount >= thresholds.fakeScanHigh) {
     score = 40;
     reason = "Multiple fake verification attempts detected";
-  } else if (fakeScanCount >= 3) {
+  } else if (fakeScanCount >= thresholds.fakeScanMedium) {
     score = 25;
     reason = "Multiple fake verification attempts detected";
   } else if (fakeScanCount >= 1) {
@@ -53,9 +59,10 @@ const analyzeSuspiciousStatus = (product) => {
  * @returns {object} { score: number, reason: string|null, scanCount: number }
  */
 const analyzeExcessiveScans = (product) => {
+  const thresholds = getRiskThresholds();
   const scanCount = product.scanCount || 0;
 
-  if (scanCount > 20) {
+  if (scanCount > thresholds.excessiveScanCount) {
     return {
       score: 20,
       reason: "Abnormally high scan activity detected",
@@ -156,18 +163,17 @@ const analyzeOwnershipInconsistency = async (product) => {
  * @returns {object} { score: number, reason: string|null, detected: boolean }
  */
 const analyzeRapidScans = (logs) => {
-  if (logs.length < 5) {
+  const thresholds = getRiskThresholds();
+  if (logs.length < thresholds.rapidScanCount) {
     return { score: 0, reason: null, detected: false };
   }
 
-  const fiveMinutesMs = 5 * 60 * 1000;
-
-  for (let i = 0; i <= logs.length - 5; i++) {
+  for (let i = 0; i <= logs.length - thresholds.rapidScanCount; i++) {
     const timeDiff =
-      new Date(logs[i + 4].createdAt).getTime() -
+      new Date(logs[i + thresholds.rapidScanCount - 1].createdAt).getTime() -
       new Date(logs[i].createdAt).getTime();
 
-    if (timeDiff <= fiveMinutesMs) {
+    if (timeDiff <= thresholds.rapidScanWindowMs) {
       return {
         score: 15,
         reason: "Rapid repeated scans detected",
@@ -177,6 +183,27 @@ const analyzeRapidScans = (logs) => {
   }
 
   return { score: 0, reason: null, detected: false };
+};
+
+const analyzeRepeatedFakeQrScans = (logs) => {
+  const fakeQrCounts = logs
+    .filter((log) => log.result === "FAKE" && log.qrData)
+    .reduce((counts, log) => {
+      counts[log.qrData] = (counts[log.qrData] || 0) + 1;
+      return counts;
+    }, {});
+
+  const repeatedCount = Math.max(0, ...Object.values(fakeQrCounts));
+
+  if (repeatedCount >= 3) {
+    return {
+      score: repeatedCount >= 5 ? 25 : 15,
+      reason: "Repeated fake QR payload detected",
+      count: repeatedCount,
+    };
+  }
+
+  return { score: 0, reason: null, count: repeatedCount };
 };
 
 /**
@@ -210,6 +237,7 @@ const analyzeProductRisk = async (productId) => {
     const suspiciousStatusAnalysis = analyzeSuspiciousStatus(product);
     const excessiveScanAnalysis = analyzeExcessiveScans(product);
     const rapidScanAnalysis = analyzeRapidScans(logs);
+    const repeatedFakeQrAnalysis = analyzeRepeatedFakeQrScans(logs);
 
     let totalScore = 0;
     const reasons = [];
@@ -234,6 +262,9 @@ const analyzeProductRisk = async (productId) => {
     totalScore += rapidScanAnalysis.score;
     if (rapidScanAnalysis.reason) reasons.push(rapidScanAnalysis.reason);
 
+    totalScore += repeatedFakeQrAnalysis.score;
+    if (repeatedFakeQrAnalysis.reason) reasons.push(repeatedFakeQrAnalysis.reason);
+
     totalScore = capRiskScore(totalScore);
     const riskLevel = calculateRiskLevel(totalScore);
     const uniqueReasonsList = uniqueReasons(reasons);
@@ -249,6 +280,7 @@ const analyzeProductRisk = async (productId) => {
         fakeScans: fakeScanAnalysis.count,
         scanCount: excessiveScanAnalysis.scanCount,
         rapidScans: rapidScanAnalysis.detected,
+        repeatedFakeQrScans: repeatedFakeQrAnalysis.count,
         isSuspicious: product.verificationStatus === "suspicious",
         supplyChainSkipped: supplyChainSkipping.score > 0,
         ownershipInconsistent: ownerInconsistency.score > 0,
@@ -267,4 +299,5 @@ module.exports = {
   analyzeSupplyChainSkipping,
   analyzeOwnershipInconsistency,
   analyzeRapidScans,
+  analyzeRepeatedFakeQrScans,
 };

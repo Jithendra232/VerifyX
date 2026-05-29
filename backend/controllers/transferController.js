@@ -2,6 +2,8 @@ const mongoose = require("mongoose");
 const Product = require("../models/Product");
 const Transfer = require("../models/Transfer");
 const User = require("../models/User");
+const { emitNotification } = require("../config/socket");
+const { sanitizeString } = require("../utils/validationUtils");
 
 const TRANSFER_TYPES = [
   "MANUFACTURER_TO_DISTRIBUTOR",
@@ -95,7 +97,7 @@ const transferProduct = async (req, res) => {
       fromUser: fromUserId,
       toUser: toUserId,
       transferType,
-      notes,
+      notes: sanitizeString(notes, 300),
     });
     
     product.currentOwner = toUserId;
@@ -106,6 +108,15 @@ const transferProduct = async (req, res) => {
     }
 
     await product.save();
+
+    emitNotification("product-transfer", {
+      type: "transfer",
+      title: "Product transfer completed",
+      message: `${product.productName} transferred to ${toUser.name}`,
+      severity: "LOW",
+      productId: product._id,
+      transferId: transfer._id,
+    }, [`user:${toUser.clerkId}`, `role:${toUser.role}`]);
 
     res.status(201).json({
       success: true,

@@ -6,10 +6,13 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import PublicLayout from "../layouts/PublicLayout";
 import LoginPage from "../pages/auth/LoginPage";
 import AdminDashboard from "../pages/dashboard/AdminDashboard";
+import AuditLogsPage from "../pages/dashboard/AuditLogsPage";
 import CustomerDashboard from "../pages/dashboard/CustomerDashboard";
 import DistributorDashboard from "../pages/dashboard/DistributorDashboard";
 import ManufacturerDashboard from "../pages/dashboard/ManufacturerDashboard";
+import ProductHistoryPage from "../pages/dashboard/ProductHistoryPage";
 import RetailerDashboard from "../pages/dashboard/RetailerDashboard";
+import VerificationHistoryPage from "../pages/dashboard/VerificationHistoryPage";
 import AddProductPage from "../pages/manufacturer/AddProductPage";
 import AboutPage from "../pages/public/AboutPage";
 import HomePage from "../pages/public/HomePage";
@@ -94,6 +97,33 @@ function AppRoutes() {
             element={
               <ProtectedRoute allowedRoles={["admin"]}>
                 <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/dashboard/history"
+            element={
+              <ProtectedRoute allowedRoles={["admin", "manufacturer", "distributor", "retailer", "customer"]}>
+                <ProductHistoryPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/dashboard/verification-history"
+            element={
+              <ProtectedRoute allowedRoles={["admin", "manufacturer", "distributor", "retailer", "customer"]}>
+                <VerificationHistoryPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/dashboard/audit-logs"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AuditLogsPage />
               </ProtectedRoute>
             }
           />

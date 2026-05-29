@@ -8,6 +8,11 @@ function Sidebar({ role }) {
     ...(normalizedRole === "manufacturer"
       ? [{ to: "/manufacturer/add-product", label: "Add Product" }]
       : []),
+    { to: "/dashboard/history", label: "Product History" },
+    { to: "/dashboard/verification-history", label: "Verification History" },
+    ...(normalizedRole === "admin"
+      ? [{ to: "/dashboard/audit-logs", label: "Audit Logs" }]
+      : []),
     { to: "/verify", label: "Verify Product" },
   ];
 

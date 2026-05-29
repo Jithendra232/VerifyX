@@ -3,11 +3,14 @@ import {
   DashboardError,
   DashboardLoading,
   DashboardPage,
+  AnalyticsGrid,
   Panel,
   QuickActionGrid,
   SimpleTable,
   StatsGrid,
+  StatusBadge,
 } from "../../components/dashboard/DashboardUI";
+import AnalyticsEnhancement from "../../components/dashboard/AnalyticsEnhancement";
 import { useDashboard } from "../../hooks/useDashboard";
 
 function ManufacturerDashboard() {
@@ -46,13 +49,40 @@ function ManufacturerDashboard() {
         ]}
       />
 
+      <AnalyticsGrid
+        charts={[
+          {
+            title: "Product Output",
+            subtitle: "Created products compared with recent transfer activity.",
+            type: "area",
+            data: [
+              { name: "Created", value: stats.totalProductsCreated || 0 },
+              { name: "Recent", value: data?.recentlyCreatedProducts?.length || 0 },
+              { name: "Transfers", value: stats.totalTransfersMade || 0 },
+              { name: "Outgoing", value: data?.recentOutgoingTransfers?.length || 0 },
+            ],
+          },
+          {
+            title: "Operational Mix",
+            subtitle: "Current manufacturer workflow balance.",
+            type: "pie",
+            data: [
+              { name: "Products", value: data?.recentlyCreatedProducts?.length || 0, color: "#2563eb" },
+              { name: "Transfers", value: data?.recentOutgoingTransfers?.length || 0, color: "#10b981" },
+            ],
+          },
+        ]}
+      />
+
+      <AnalyticsEnhancement />
+
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
         <Panel title="Recently Created Products" subtitle="Most recent products registered to your organization.">
           <SimpleTable
             columns={[
               { key: "productName", header: "Product", render: (row) => row.productName || "-" },
               { key: "batchNumber", header: "Batch", render: (row) => row.batchNumber || "-" },
-              { key: "verificationStatus", header: "Status", render: (row) => row.verificationStatus || "-" },
+              { key: "verificationStatus", header: "Status", render: (row) => <StatusBadge tone="success">{row.verificationStatus || "-"}</StatusBadge> },
             ]}
             rows={(data?.recentlyCreatedProducts || []).map((item) => ({ ...item, id: item._id }))}
             emptyTitle="No products created"

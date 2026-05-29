@@ -3,11 +3,13 @@ import {
   DashboardError,
   DashboardLoading,
   DashboardPage,
+  AnalyticsGrid,
   Panel,
   QuickActionGrid,
   SimpleTable,
   StatsGrid,
 } from "../../components/dashboard/DashboardUI";
+import AnalyticsEnhancement from "../../components/dashboard/AnalyticsEnhancement";
 import { useDashboard } from "../../hooks/useDashboard";
 
 function RetailerDashboard() {
@@ -40,6 +42,24 @@ function RetailerDashboard() {
           { title: "Monitor Inventory", description: "Keep product custody aligned with current stock.", to: "/dashboard/retailer" },
         ]}
       />
+
+      <AnalyticsGrid
+        charts={[
+          {
+            title: "Retail Flow",
+            subtitle: "Inventory and customer transfer activity.",
+            type: "bar",
+            color: "#10b981",
+            data: [
+              { name: "Inventory", value: stats.inventoryCount || 0 },
+              { name: "Sold", value: stats.productsSold || 0 },
+              { name: "Transfers", value: data?.customerTransfers?.length || 0 },
+            ],
+          },
+        ]}
+      />
+
+      <AnalyticsEnhancement />
 
       <Panel title="Customer Transfers" subtitle="Recent deliveries from your store to customers.">
         <SimpleTable

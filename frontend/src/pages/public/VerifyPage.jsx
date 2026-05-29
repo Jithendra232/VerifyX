@@ -1,6 +1,8 @@
 import { useCallback, useRef, useState } from "react";
+import ToastStack from "../../components/common/ToastStack";
 import QrScanner from "../../components/scanner/QrScanner";
 import { API_BASE_URL } from "../../config/api";
+import { saveVerificationRecord } from "../../utils/verificationHistory";
 
 function extractProductIdFromQr(rawValue) {
   const value = String(rawValue || "").trim();
@@ -27,6 +29,27 @@ function extractProductIdFromQr(rawValue) {
   } catch {
     return /\s/.test(value) ? "" : value;
   }
+}
+
+function getBrowserLocation() {
+  if (!("geolocation" in navigator)) {
+    return Promise.resolve(null);
+  }
+
+  return new Promise((resolve) => {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        resolve({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+          accuracy: position.coords.accuracy,
+          source: "browser",
+        });
+      },
+      () => resolve(null),
+      { enableHighAccuracy: false, maximumAge: 5 * 60 * 1000, timeout: 2500 }
+    );
+  });
 }
 
 function ResultCard({ result }) {
@@ -65,9 +88,18 @@ function VerifyPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [toasts, setToasts] = useState([]);
   const [result, setResult] = useState(null);
   const activeRequestRef = useRef(false);
   const lastScannedIdRef = useRef("");
+
+  const addToast = useCallback((toast) => {
+    const id = `${Date.now()}-${toast.title}`;
+    setToasts((current) => [{ id, ...toast }, ...current.filter((item) => item.title !== toast.title)].slice(0, 3));
+    window.setTimeout(() => {
+      setToasts((current) => current.filter((item) => item.id !== id));
+    }, 3500);
+  }, []);
 
   const verifyProduct = useCallback(async (id, source = "manual") => {
     const normalizedId = String(id || "").trim();
@@ -75,6 +107,7 @@ function VerifyPage() {
     if (!normalizedId) {
       setResult(null);
       setError(source === "scan" ? "Malformed QR code: no product ID found." : "Enter a product ID");
+      addToast({ type: "warning", title: "Invalid QR data", message: "No product ID was found in the scanned code." });
       return;
     }
 
@@ -100,29 +133,50 @@ function VerifyPage() {
     setResult(null);
 
     try {
+      const location = await getBrowserLocation();
       const response = await fetch(`${API_BASE_URL}/verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ productId: normalizedId }),
+        body: JSON.stringify({ productId: normalizedId, location }),
       });
 
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {
         if (source === "scan") {
-          setResult({
+          const suspiciousResult = {
             success: false,
             status: "suspicious",
             productId: normalizedId,
             message: data.message || "Product could not be verified.",
+          };
+          setResult(suspiciousResult);
+          saveVerificationRecord({
+            productId: normalizedId,
+            source,
+            status: "suspicious",
+            message: suspiciousResult.message,
           });
+          addToast({ type: "warning", title: "Suspicious product", message: suspiciousResult.message });
         } else {
           setError(data.message || "Verification failed");
+          addToast({ type: "error", title: "Verification failed", message: data.message || "Verification failed" });
         }
       } else {
         setResult(data);
+        if (!location) {
+          setNotice("Verification completed. Location was not captured because browser permission was unavailable or denied.");
+        }
+        saveVerificationRecord({
+          productId: normalizedId,
+          source,
+          status: data.status || data.verificationStatus || "verified",
+          message: data.message || "Product verified successfully.",
+        });
+        addToast({ type: "success", title: "Product verified", message: "Verification completed successfully." });
       }
     } catch {
       setError("Network error");
+      addToast({ type: "error", title: "Network error", message: "Unable to complete verification right now." });
       if (source === "scan") {
         lastScannedIdRef.current = "";
       }
@@ -130,7 +184,7 @@ function VerifyPage() {
       activeRequestRef.current = false;
       setLoading(false);
     }
-  }, []);
+  }, [addToast]);
 
   const handleVerify = () => {
     setNotice("");
@@ -147,6 +201,7 @@ function VerifyPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      <ToastStack items={toasts} onDismiss={(id) => setToasts((current) => current.filter((item) => item.id !== id))} />
       <section className="border-b border-slate-200 bg-white">
         <div className="mx-auto max-w-6xl px-4 py-10">
           <p className="text-sm font-semibold uppercase tracking-wide text-blue-600">Product Verification</p>

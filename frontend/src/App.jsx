@@ -1,5 +1,6 @@
 import { ClerkProvider } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
+import ErrorBoundary from "./components/common/ErrorBoundary";
 import { AuthSyncProvider } from "./context/AuthSyncContext";
 import AppRoutes from "./routes/AppRoutes";
 import "./index.css";
@@ -19,9 +20,11 @@ function App() {
       signInFallbackRedirectUrl="/login"
       signUpFallbackRedirectUrl="/sign-up"
     >
-      <AuthSyncProvider>
-        <AppRoutes />
-      </AuthSyncProvider>
+      <ErrorBoundary>
+        <AuthSyncProvider>
+          <AppRoutes />
+        </AuthSyncProvider>
+      </ErrorBoundary>
     </ClerkProvider>
   );
 }
