@@ -1,6 +1,7 @@
 import { ClerkProvider } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
 import ErrorBoundary from "./components/common/ErrorBoundary";
+import PageMeta from "./components/common/PageMeta";
 import { AuthSyncProvider } from "./context/AuthSyncContext";
 import AppRoutes from "./routes/AppRoutes";
 import "./index.css";
@@ -22,6 +23,7 @@ function App() {
     >
       <ErrorBoundary>
         <AuthSyncProvider>
+          <PageMeta />
           <AppRoutes />
         </AuthSyncProvider>
       </ErrorBoundary>

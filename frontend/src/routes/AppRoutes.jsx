@@ -15,11 +15,19 @@ import RetailerDashboard from "../pages/dashboard/RetailerDashboard";
 import VerificationHistoryPage from "../pages/dashboard/VerificationHistoryPage";
 import AddProductPage from "../pages/manufacturer/AddProductPage";
 import AboutPage from "../pages/public/AboutPage";
+import ContactPage from "../pages/public/ContactPage";
+import GlobalErrorPage from "../pages/public/GlobalErrorPage";
+import MaintenancePage from "../pages/public/MaintenancePage";
+import NotFoundPage from "../pages/public/NotFoundPage";
+import PrivacyPage from "../pages/public/PrivacyPage";
+import TermsPage from "../pages/public/TermsPage";
 import HomePage from "../pages/public/HomePage";
 import UnauthorizedPage from "../pages/public/UnauthorizedPage";
 import VerifyPage from "../pages/public/VerifyPage";
 import SignupPage from "../pages/auth/SignupPage";
 import AuthCallbackPage from "../pages/auth/AuthCallbackPage";
+import UserProfilePage from "../pages/dashboard/UserProfilePage";
+import SettingsPage from "../pages/dashboard/SettingsPage";
 
 function AppRoutes() {
   return (
@@ -30,7 +38,12 @@ function AppRoutes() {
         <Route element={<PublicLayout />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/about" element={<AboutPage />} />
+          <Route path="/contact" element={<ContactPage />} />
           <Route path="/verify" element={<VerifyPage />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/maintenance" element={<MaintenancePage />} />
+          <Route path="/error" element={<GlobalErrorPage />} />
           <Route path="/login/*" element={<LoginPage />} />
           <Route path="/sign-up/*" element={<SignupPage />} />
           <Route path="/unauthorized" element={<UnauthorizedPage />} />
@@ -129,6 +142,24 @@ function AppRoutes() {
           />
 
           <Route
+            path="/dashboard/profile"
+            element={
+              <ProtectedRoute allowedRoles={["admin", "manufacturer", "distributor", "retailer", "customer"]}>
+                <UserProfilePage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/dashboard/settings"
+            element={
+              <ProtectedRoute allowedRoles={["admin", "manufacturer", "distributor", "retailer", "customer"]}>
+                <SettingsPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
             path="/manufacturer/add-product"
             element={
               <ProtectedRoute allowedRoles={["manufacturer"]}>
@@ -137,6 +168,7 @@ function AppRoutes() {
             }
           />
         </Route>
+        <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 }

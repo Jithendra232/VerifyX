@@ -1,5 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { normalizeRole } from "../../utils/roleUtils";
+import Logo from "./Logo";
 
 function Sidebar({ role }) {
   const normalizedRole = normalizeRole(role) || "customer";
@@ -10,6 +11,8 @@ function Sidebar({ role }) {
       : []),
     { to: "/dashboard/history", label: "Product History" },
     { to: "/dashboard/verification-history", label: "Verification History" },
+    { to: "/dashboard/profile", label: "Profile" },
+    { to: "/dashboard/settings", label: "Settings" },
     ...(normalizedRole === "admin"
       ? [{ to: "/dashboard/audit-logs", label: "Audit Logs" }]
       : []),
@@ -18,6 +21,9 @@ function Sidebar({ role }) {
 
   return (
     <aside className="hidden w-64 border-r border-slate-200 bg-white p-4 md:block">
+      <div className="mb-4">
+        <Logo />
+      </div>
       <div className="rounded-xl bg-slate-900 px-3 py-4 text-white">
         <p className="text-xs uppercase tracking-wide text-slate-300">Role</p>
         <p className="mt-1 text-sm font-semibold capitalize">{normalizedRole}</p>

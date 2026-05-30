@@ -1,5 +1,5 @@
 import { Component } from "react";
-import FeedbackBanner from "./FeedbackBanner";
+import GlobalErrorPage from "../../pages/public/GlobalErrorPage";
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -17,15 +17,7 @@ class ErrorBoundary extends Component {
 
   render() {
     if (this.state.hasError) {
-      return (
-        <div className="p-4">
-          <FeedbackBanner
-            type="error"
-            title="Something went wrong"
-            message="Refresh the page or try the action again. Your session was not changed."
-          />
-        </div>
-      );
+      return <GlobalErrorPage />;
     }
 
     return this.props.children;
