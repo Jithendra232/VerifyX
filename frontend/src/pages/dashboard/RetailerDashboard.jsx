@@ -31,14 +31,14 @@ function RetailerDashboard() {
           { label: "Inventory Units", value: stats.inventoryCount || 0, helper: "Available for sale", tone: "bg-blue-500" },
           { label: "Products Sold", value: stats.productsSold || 0, helper: "Customer handoffs", tone: "bg-emerald-500" },
           { label: "Customer Transfers", value: data?.customerTransfers?.length || 0, helper: "Recent transfer records", tone: "bg-indigo-500" },
-          { label: "Verification Ready", value: "QR", helper: "Scan before checkout", tone: "bg-amber-500" },
+          { label: "Pending Incoming", value: stats.pendingIncomingTransfersCount || 0, helper: "Needs approval", tone: "bg-amber-500" },
         ]}
       />
 
       <QuickActionGrid
         items={[
           { title: "Verify at Counter", description: "Scan QR codes before completing customer handoff.", to: "/verify" },
-          { title: "Review Transfers", description: "Check recent customer deliveries and ownership movement.", to: "/dashboard/retailer" },
+          { title: "Manage Transfers", description: "Approve stock requests and send products to customers.", to: "/dashboard/transfers" },
           { title: "Monitor Inventory", description: "Keep product custody aligned with current stock.", to: "/dashboard/retailer" },
         ]}
       />

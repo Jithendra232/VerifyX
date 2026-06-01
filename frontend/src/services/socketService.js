@@ -8,12 +8,27 @@ const SOCKET_URL =
 let socket;
 let activeKey;
 
-export const connectNotificationSocket = ({ userId, role, token, onNotification }) => {
-  if (!userId || !token) return null;
+export const connectNotificationSocket = async ({
+  userId,
+  getToken,
+  onNotification,
+}) => {
+  if (!userId || !getToken) {
+    return null;
+  }
 
-  const nextKey = `${userId}:${role || "user"}`;
+  const token = await getToken({ skipCache: true });
+
+  if (!token) {
+    return null;
+  }
+
+  const nextKey = userId;
+
   if (socket && activeKey === nextKey) {
-    if (onNotification) socket.off("notification").on("notification", onNotification);
+    if (onNotification) {
+      socket.off("notification").on("notification", onNotification);
+    }
     return socket;
   }
 
@@ -25,7 +40,7 @@ export const connectNotificationSocket = ({ userId, role, token, onNotification 
   activeKey = nextKey;
   socket = io(SOCKET_URL, {
     transports: ["websocket"],
-    auth: { userId, role, token },
+    auth: { token },
     reconnectionAttempts: 5,
   });
 

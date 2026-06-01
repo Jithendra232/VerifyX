@@ -37,7 +37,7 @@ function ManufacturerDashboard() {
           { label: "Products Created", value: stats.totalProductsCreated || 0, helper: "Registered by your organization", tone: "bg-blue-500" },
           { label: "Transfers Made", value: stats.totalTransfersMade || 0, helper: "Outbound custody updates", tone: "bg-emerald-500" },
           { label: "Recent Products", value: data?.recentlyCreatedProducts?.length || 0, helper: "Visible product records", tone: "bg-indigo-500" },
-          { label: "Outgoing Queue", value: data?.recentOutgoingTransfers?.length || 0, helper: "Latest transfer rows", tone: "bg-amber-500" },
+          { label: "Pending Outgoing", value: stats.pendingOutgoingTransfersCount || 0, helper: "Awaiting receiver approval", tone: "bg-amber-500" },
         ]}
       />
 
@@ -45,7 +45,7 @@ function ManufacturerDashboard() {
         items={[
           { title: "Add Product", description: "Create a new product record with batch and verification details.", to: "/manufacturer/add-product" },
           { title: "Verify Products", description: "Scan QR codes or manually validate a product ID.", to: "/verify" },
-          { title: "Monitor Transfers", description: "Review recent downstream handoffs from your facility.", to: "/dashboard/manufacturer" },
+          { title: "Manage Transfers", description: "Send product transfer requests to distributors.", to: "/dashboard/transfers" },
         ]}
       />
 

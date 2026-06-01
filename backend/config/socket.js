@@ -1,6 +1,46 @@
 const { Server } = require("socket.io");
+const { verifyToken } = require("@clerk/backend");
+const User = require("../models/User");
+const { normalizeRole } = require("../utils/roleUtils");
 
 let io;
+
+const authenticateSocket = async (socket, next) => {
+  try {
+    const token = socket.handshake.auth?.token;
+
+    if (!token || typeof token !== "string") {
+      return next(new Error("Unauthorized"));
+    }
+
+    const payload = await verifyToken(token, {
+      secretKey: process.env.CLERK_SECRET_KEY,
+    });
+
+    const clerkId = payload?.sub;
+
+    if (!clerkId) {
+      return next(new Error("Unauthorized"));
+    }
+
+    const user = await User.findOne({ clerkId });
+
+    if (!user) {
+      return next(new Error("Unauthorized"));
+    }
+
+    socket.data.userId = clerkId;
+    socket.data.role = normalizeRole(user.role);
+
+    return next();
+  } catch (error) {
+    if (process.env.NODE_ENV !== "production") {
+      console.error("[SocketAuth] Connection rejected:", error.message);
+    }
+
+    return next(new Error("Unauthorized"));
+  }
+};
 
 const initSocket = (server) => {
   io = new Server(server, {
@@ -10,12 +50,18 @@ const initSocket = (server) => {
     },
   });
 
-  io.on("connection", (socket) => {
-    const userId = socket.handshake.auth?.userId;
-    const role = socket.handshake.auth?.role;
+  io.use(authenticateSocket);
 
-    if (userId) socket.join(`user:${userId}`);
-    if (role) socket.join(`role:${role}`);
+  io.on("connection", (socket) => {
+    const { userId, role } = socket.data;
+
+    if (userId) {
+      socket.join(`user:${userId}`);
+    }
+
+    if (role) {
+      socket.join(`role:${role}`);
+    }
 
     socket.on("disconnect", () => {});
   });

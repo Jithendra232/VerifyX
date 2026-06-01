@@ -1,5 +1,4 @@
 import { API_BASE_URL } from "../config/api";
-import { agentDebugLog } from "../utils/agentDebugLog";
 
 export class AuthNotReadyError extends Error {
   constructor() {
@@ -25,22 +24,8 @@ const fetchWithToken = async (path, token, options = {}) => {
 };
 
 export const apiFetchWithToken = async (path, token, options = {}) => {
-  let response = await fetchWithToken(path, token, options);
-  let data = await response.json().catch(() => ({}));
-
-  // #region agent log
-  agentDebugLog(
-    "apiClient.js:response",
-    "api response received",
-    {
-      path,
-      status: response.status,
-      ok: response.ok,
-      hasAuthHeader: Boolean(token),
-    },
-    "D"
-  );
-  // #endregion
+  const response = await fetchWithToken(path, token, options);
+  const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
     const message = data.message || "Request failed";
@@ -79,7 +64,7 @@ export const apiFetch = async (path, getToken, options = {}) => {
     if (error.isAuthError && error.status === 401) {
       const refreshedToken = await getToken({ skipCache: true });
 
-      if (refreshedToken && refreshedToken !== token) {
+      if (refreshedToken) {
         return apiFetchWithToken(path, refreshedToken, options);
       }
     }

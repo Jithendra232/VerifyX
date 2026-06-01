@@ -136,6 +136,15 @@ function ProductHistoryPage() {
       </Panel>
 
       <Panel title="Ownership Timeline" subtitle="Recent custody and transfer events.">
+        {journey?.currentOwner ? (
+          <div className="mb-4 rounded-lg border border-blue-100 bg-blue-50 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">Current Owner</p>
+            <p className="mt-1 font-semibold text-slate-950">
+              {journey.currentOwner.name || journey.currentOwner.email || "Unknown user"}
+            </p>
+            <p className="text-sm capitalize text-slate-600">{journey.currentOwner.role || "role unavailable"}</p>
+          </div>
+        ) : null}
         {journeyError ? (
           <p className="rounded-lg bg-red-50 p-3 text-sm text-red-700">{journeyError}</p>
         ) : journey ? (

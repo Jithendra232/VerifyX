@@ -6,12 +6,13 @@ const { logFilter, getLogDisplayStatus } = require("../utils/verificationHelpers
 
 const transferPopulate = [
   { path: "product", select: "productName batchNumber" },
+  { path: "fromUser", select: "name role" },
   { path: "toUser", select: "name role" },
 ];
 
 const manufacturerTransferPopulate = [
   { path: "product", select: "productName" },
-  { path: "toUser", select: "name" },
+  { path: "toUser", select: "name role" },
 ];
 
 const handleError = (res, error, message) => {
@@ -29,11 +30,13 @@ const getManufacturerDashboard = async (req, res) => {
     const [
       totalProductsCreated,
       totalTransfersMade,
+      pendingOutgoingTransfersCount,
       recentlyCreatedProducts,
       recentOutgoingTransfers,
     ] = await Promise.all([
       Product.countDocuments({ createdBy: userId }),
       Transfer.countDocuments({ fromUser: userId }),
+      Transfer.countDocuments({ fromUser: userId, status: "PENDING" }),
       Product.find({ createdBy: userId })
         .sort({ createdAt: -1 })
         .limit(5)
@@ -52,6 +55,7 @@ const getManufacturerDashboard = async (req, res) => {
       stats: {
         totalProductsCreated,
         totalTransfersMade,
+        pendingOutgoingTransfersCount,
       },
       recentlyCreatedProducts,
       recentOutgoingTransfers,
@@ -70,6 +74,8 @@ const getDistributorDashboard = async (req, res) => {
       productsCurrentlyOwned,
       receivedTransfersCount,
       outgoingTransfersCount,
+      pendingIncomingTransfersCount,
+      pendingOutgoingTransfersCount,
       receivedTransfers,
       outgoingTransfers,
     ] = await Promise.all([
@@ -81,6 +87,8 @@ const getDistributorDashboard = async (req, res) => {
         .lean(),
       Transfer.countDocuments({ toUser: userId }),
       Transfer.countDocuments({ fromUser: userId }),
+      Transfer.countDocuments({ toUser: userId, status: "PENDING" }),
+      Transfer.countDocuments({ fromUser: userId, status: "PENDING" }),
       Transfer.find({ toUser: userId })
         .sort({ createdAt: -1 })
         .limit(5)
@@ -101,6 +109,8 @@ const getDistributorDashboard = async (req, res) => {
         inventoryCount,
         receivedTransfersCount,
         outgoingTransfersCount,
+        pendingIncomingTransfersCount,
+        pendingOutgoingTransfersCount,
       },
       productsCurrentlyOwned,
       receivedTransfers,
@@ -119,6 +129,8 @@ const getRetailerDashboard = async (req, res) => {
       inventoryCount,
       productsCurrentlyOwned,
       productsSold,
+      pendingIncomingTransfersCount,
+      pendingOutgoingTransfersCount,
       customerTransfers,
     ] = await Promise.all([
       Product.countDocuments({ currentOwner: userId }),
@@ -131,6 +143,8 @@ const getRetailerDashboard = async (req, res) => {
         fromUser: userId,
         transferType: "RETAILER_TO_CUSTOMER",
       }),
+      Transfer.countDocuments({ toUser: userId, status: "PENDING" }),
+      Transfer.countDocuments({ fromUser: userId, status: "PENDING" }),
       Transfer.find({
         fromUser: userId,
         transferType: "RETAILER_TO_CUSTOMER",
@@ -148,6 +162,8 @@ const getRetailerDashboard = async (req, res) => {
         inventoryCount,
         productsSold,
         inStock: inventoryCount,
+        pendingIncomingTransfersCount,
+        pendingOutgoingTransfersCount,
       },
       productsCurrentlyOwned,
       customerTransfers,
@@ -173,7 +189,7 @@ const getCustomerDashboard = async (req, res) => {
 
     const ownedProductIds = ownedProducts.map((product) => product._id);
 
-    const [verifiedProductsCount, suspiciousScans] = await Promise.all([
+    const [verifiedProductsCount, suspiciousScans, pendingIncomingTransfersCount] = await Promise.all([
       VerificationLog.countDocuments({
         product: { $in: ownedProductIds },
         ...logFilter.authentic,
@@ -190,6 +206,7 @@ const getCustomerDashboard = async (req, res) => {
         .select("product scannedBy status resultFlags createdAt")
         .populate("product", "productName batchNumber verificationStatus")
         .lean(),
+      Transfer.countDocuments({ toUser: userId, status: "PENDING" }),
     ]);
 
     res.status(200).json({
@@ -198,6 +215,7 @@ const getCustomerDashboard = async (req, res) => {
         ownedProductsCount: ownedProducts.length,
         verifiedProductsCount,
         suspiciousScansCount: suspiciousScans.length,
+        pendingIncomingTransfersCount,
       },
       ownedProducts,
       verifiedProductsCount,
@@ -215,6 +233,7 @@ const getAdminDashboard = async (req, res) => {
       totalProducts,
       totalTransfers,
       suspiciousProductsCount,
+      pendingTransfersCount,
       recentProducts,
       recentTransfers,
       recentVerifications,
@@ -226,6 +245,7 @@ const getAdminDashboard = async (req, res) => {
       Product.countDocuments(),
       Transfer.countDocuments(),
       Product.countDocuments({ verificationStatus: "suspicious" }),
+      Transfer.countDocuments({ status: "PENDING" }),
       Product.find()
         .sort({ createdAt: -1 })
         .limit(5)
@@ -295,6 +315,7 @@ const getAdminDashboard = async (req, res) => {
         totalProducts,
         totalTransfers,
         suspiciousProductsCount,
+        pendingTransfersCount,
       },
       recentActivities,
       analyticsSummary: {

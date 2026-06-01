@@ -5,6 +5,13 @@ function actorLabel(user) {
   return `${user.name || user.email || "User"}${user.role ? ` (${user.role})` : ""}`;
 }
 
+function toneForStatus(status) {
+  if (status === "COMPLETED" || status === "ACCEPTED") return "success";
+  if (status === "REJECTED") return "danger";
+  if (status === "PENDING") return "warning";
+  return "info";
+}
+
 function ProductJourneyTimeline({ journey }) {
   const items = journey?.timeline || [];
 
@@ -28,12 +35,21 @@ function ProductJourneyTimeline({ journey }) {
                 {item.notes ? <p className="mt-2 text-sm text-slate-600">{item.notes}</p> : null}
               </div>
               <div className="flex flex-col items-start gap-2 sm:items-end">
-                <StatusBadge tone={item.status === "COMPLETED" ? "success" : "info"}>{item.status || item.type}</StatusBadge>
+                <StatusBadge tone={toneForStatus(item.status)}>{item.status || item.type}</StatusBadge>
                 <span className="text-xs text-slate-400">
                   {item.createdAt ? new Date(item.createdAt).toLocaleString() : ""}
                 </span>
               </div>
             </div>
+            {item.statusHistory?.length ? (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {item.statusHistory.map((history, idx) => (
+                  <span key={`${history.status}-${idx}`} className="rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-600">
+                    {history.status} {history.changedAt ? new Date(history.changedAt).toLocaleDateString() : ""}
+                  </span>
+                ))}
+              </div>
+            ) : null}
           </div>
         </li>
       ))}

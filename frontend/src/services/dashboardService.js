@@ -1,5 +1,5 @@
-import { apiFetchWithToken } from "./apiClient";
+import { apiFetch } from "./apiClient";
 import { normalizeRole } from "../utils/roleUtils";
 
-export const fetchDashboardByRole = (role, token) =>
-  apiFetchWithToken(`/dashboard/${normalizeRole(role)}`, token);
+export const fetchDashboardByRole = (role, getToken) =>
+  apiFetch(`/dashboard/${normalizeRole(role)}`, getToken);

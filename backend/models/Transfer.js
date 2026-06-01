@@ -29,13 +29,37 @@ const transferSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["PENDING", "COMPLETED"],
-      default: "COMPLETED",
+      enum: ["PENDING", "ACCEPTED", "REJECTED", "COMPLETED"],
+      default: "PENDING",
     },
     notes: {
       type: String,
       default: "",
     },
+    statusHistory: [
+      {
+        status: {
+          type: String,
+          enum: ["PENDING", "ACCEPTED", "REJECTED", "COMPLETED"],
+          required: true,
+        },
+        changedBy: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+        note: {
+          type: String,
+          default: "",
+        },
+        changedAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
+    acceptedAt: Date,
+    rejectedAt: Date,
+    completedAt: Date,
   },
   { timestamps: true }
 );

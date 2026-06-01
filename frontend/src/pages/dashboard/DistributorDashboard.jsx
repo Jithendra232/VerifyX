@@ -31,7 +31,7 @@ function DistributorDashboard() {
           { label: "Inventory Units", value: stats.inventoryCount || 0, helper: "Products under custody", tone: "bg-blue-500" },
           { label: "Transfers Received", value: stats.receivedTransfersCount || 0, helper: "Inbound handoffs", tone: "bg-emerald-500" },
           { label: "Outgoing Transfers", value: stats.outgoingTransfersCount || 0, helper: "Downstream shipments", tone: "bg-indigo-500" },
-          { label: "Listed Products", value: data?.productsCurrentlyOwned?.length || 0, helper: "Visible inventory rows", tone: "bg-amber-500" },
+          { label: "Pending Incoming", value: stats.pendingIncomingTransfersCount || 0, helper: "Needs approval", tone: "bg-amber-500" },
         ]}
       />
 
@@ -39,7 +39,7 @@ function DistributorDashboard() {
         items={[
           { title: "Verify Stock", description: "Scan inventory QR labels before dispatch.", to: "/verify" },
           { title: "Review Inventory", description: "Check current ownership and quantities.", to: "/dashboard/distributor" },
-          { title: "Prepare Transfers", description: "Use custody records to validate outbound movement.", to: "/dashboard/distributor" },
+          { title: "Manage Transfers", description: "Approve inbound requests and send products to retailers.", to: "/dashboard/transfers" },
         ]}
       />
 

@@ -12,22 +12,27 @@ function toneForSeverity(severity) {
 }
 
 function NotificationCenter() {
-  const { hasActiveSession, isSessionReady, mongoUser, token, userId } = useAuthSync();
+  const { hasActiveSession, isSessionReady, getToken, userId } = useAuthSync();
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState([]);
 
   useEffect(() => {
-    if (!hasActiveSession || !isSessionReady || !token || !userId) {
+    if (!hasActiveSession || !isSessionReady || !getToken || !userId) {
       disconnectNotificationSocket();
       setItems([]);
       return undefined;
     }
 
-    const socket = connectNotificationSocket({
+    let active = true;
+
+    connectNotificationSocket({
       userId,
-      role: mongoUser?.role,
-      token,
+      getToken,
       onNotification: (notification) => {
+        if (!active) {
+          return;
+        }
+
         setItems((current) => [
           notification,
           ...current.filter((item) => item.id !== notification.id),
@@ -36,10 +41,10 @@ function NotificationCenter() {
     });
 
     return () => {
-      socket?.off("notification");
+      active = false;
       disconnectNotificationSocket();
     };
-  }, [hasActiveSession, isSessionReady, mongoUser?.role, token, userId]);
+  }, [hasActiveSession, isSessionReady, getToken, userId]);
 
   useEffect(() => {
     if (!hasActiveSession) {

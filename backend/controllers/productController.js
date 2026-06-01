@@ -169,6 +169,7 @@ const getProductJourney = async (req, res) => {
         toUser: transfer.toUser,
         createdAt: transfer.createdAt,
         status: transfer.status,
+        statusHistory: transfer.statusHistory,
         notes: transfer.notes,
       })),
     ].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));

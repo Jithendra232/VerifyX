@@ -1,6 +1,15 @@
 const User = require("../models/User");
 const { isAdminEmail } = require("../utils/adminEmails");
 const { buildEmailRegex, normalizeEmail } = require("../utils/emailUtils");
+const { normalizeRole } = require("../utils/roleUtils");
+
+const VALID_ROLES = [
+  "admin",
+  "manufacturer",
+  "distributor",
+  "retailer",
+  "customer",
+];
 
 const syncUser = async (req, res) => {
   try {
@@ -84,16 +93,41 @@ const updateUserRole = async (req, res) => {
   try {
     const { userId, role } = req.body;
 
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "userId is required",
+      });
+    }
+
+    const normalizedRole = normalizeRole(role);
+
+    if (!VALID_ROLES.includes(normalizedRole)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid role",
+      });
+    }
+
     const user = await User.findByIdAndUpdate(
       userId,
-      { role },
-      { returnDocument: "after" }
+      { role: normalizedRole },
+      { returnDocument: "after", runValidators: true }
     );
 
-    res.status(200).json(user);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    return res.status(200).json(user);
   } catch (error) {
-    res.status(500).json({
-      message: error.message,
+    console.error("[users] updateUserRole failed:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update user role",
     });
   }
 };

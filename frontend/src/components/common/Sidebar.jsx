@@ -10,6 +10,9 @@ function Sidebar({ role }) {
       ? [{ to: "/manufacturer/add-product", label: "Add Product" }]
       : []),
     { to: "/dashboard/history", label: "Product History" },
+    ...(normalizedRole !== "admin"
+      ? [{ to: "/dashboard/transfers", label: "Transfers" }]
+      : []),
     { to: "/dashboard/verification-history", label: "Verification History" },
     { to: "/dashboard/profile", label: "Profile" },
     { to: "/dashboard/settings", label: "Settings" },

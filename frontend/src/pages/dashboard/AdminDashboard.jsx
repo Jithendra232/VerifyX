@@ -59,7 +59,7 @@ function AdminDashboard() {
           { label: "Total Users", value: stats.totalUsers || 0, helper: "Synced platform accounts", tone: "bg-blue-500" },
           { label: "Registered Products", value: stats.totalProducts || 0, helper: "Tracked product records", tone: "bg-emerald-500" },
           { label: "Transfers", value: stats.totalTransfers || 0, helper: "Custody events recorded", tone: "bg-indigo-500" },
-          { label: "Risk Alerts", value: highRisk.length, helper: "Products needing review", tone: "bg-red-500" },
+          { label: "Pending Transfers", value: stats.pendingTransfersCount || 0, helper: "Awaiting receiver approval", tone: "bg-amber-500" },
         ]}
       />
 

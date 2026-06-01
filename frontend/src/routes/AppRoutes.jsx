@@ -13,6 +13,7 @@ import ManufacturerDashboard from "../pages/dashboard/ManufacturerDashboard";
 import ProductHistoryPage from "../pages/dashboard/ProductHistoryPage";
 import RetailerDashboard from "../pages/dashboard/RetailerDashboard";
 import VerificationHistoryPage from "../pages/dashboard/VerificationHistoryPage";
+import TransferManagementPage from "../pages/dashboard/TransferManagementPage";
 import AddProductPage from "../pages/manufacturer/AddProductPage";
 import AboutPage from "../pages/public/AboutPage";
 import ContactPage from "../pages/public/ContactPage";
@@ -128,6 +129,15 @@ function AppRoutes() {
             element={
               <ProtectedRoute allowedRoles={["admin", "manufacturer", "distributor", "retailer", "customer"]}>
                 <VerificationHistoryPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/dashboard/transfers"
+            element={
+              <ProtectedRoute allowedRoles={["manufacturer", "distributor", "retailer", "customer"]}>
+                <TransferManagementPage />
               </ProtectedRoute>
             }
           />

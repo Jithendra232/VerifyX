@@ -32,14 +32,14 @@ function CustomerDashboard() {
           { label: "Owned Products", value: stats.ownedProductsCount || 0, helper: "Linked to your account", tone: "bg-blue-500" },
           { label: "Verified", value: stats.verifiedProductsCount || 0, helper: "Confirmed authentic", tone: "bg-emerald-500" },
           { label: "Suspicious Scans", value: stats.suspiciousScansCount || 0, helper: "Needs attention", tone: "bg-red-500" },
-          { label: "Visible Products", value: data?.ownedProducts?.length || 0, helper: "Shown in this wallet", tone: "bg-indigo-500" },
+          { label: "Pending Incoming", value: stats.pendingIncomingTransfersCount || 0, helper: "Needs approval", tone: "bg-indigo-500" },
         ]}
       />
 
       <QuickActionGrid
         items={[
           { title: "Verify a Product", description: "Scan QR codes or enter a product ID manually.", to: "/verify" },
-          { title: "Review Wallet", description: "See products currently linked to your account.", to: "/dashboard/customer" },
+          { title: "Incoming Transfers", description: "Accept or reject products sent to your account.", to: "/dashboard/transfers" },
           { title: "Check Suspicious Scans", description: "Re-verify products that may need investigation.", to: "/dashboard/customer" },
         ]}
       />
