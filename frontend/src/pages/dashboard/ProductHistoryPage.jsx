@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import FilterToolbar from "../../components/common/FilterToolbar";
 import Pagination from "../../components/common/Pagination";
 import ProductJourneyTimeline from "../../components/dashboard/ProductJourneyTimeline";
+import SupplyChainIntelligencePanel from "../../components/dashboard/SupplyChainIntelligencePanel";
 import {
   DashboardError,
   DashboardLoading,
@@ -11,6 +12,7 @@ import {
   StatusBadge,
   Timeline,
 } from "../../components/dashboard/DashboardUI";
+import SupplyChainRouteMap from "../../components/maps/SupplyChainRouteMap";
 import VerificationLocationMap from "../../components/maps/VerificationLocationMap";
 import { useAuthSync } from "../../context/AuthSyncContext";
 import { useDashboard } from "../../hooks/useDashboard";
@@ -154,17 +156,30 @@ function ProductHistoryPage() {
         )}
       </Panel>
 
+      <Panel title="Supply Chain Route" subtitle="Manufacturer to customer route with geo events from transfers and verifications.">
+        <SupplyChainRouteMap
+          mapPoints={journey?.mapPoints || []}
+          routeChain={journey?.routeChain || []}
+        />
+      </Panel>
+
+      <Panel title="Fraud & Counterfeit Intelligence" subtitle="Rule-based risk scoring, route anomalies, and investigator explanations.">
+        <SupplyChainIntelligencePanel intelligence={journey?.intelligence} />
+      </Panel>
+
       <Panel title="Verification Locations" subtitle="Scan locations and risk hotspots for the selected product.">
         <VerificationLocationMap
-          locations={(journey?.verifications || [])
-            .filter((log) => log.locationData)
-            .map((log) => ({
-              ...log.locationData,
-              id: log._id,
-              label: log.product?.productName || journey?.product?.productName,
-              severity: log.result === "AUTHENTIC" ? "LOW" : "HIGH",
-              timestamp: log.createdAt,
-            }))}
+          locations={(journey?.mapPoints?.length
+            ? journey.mapPoints
+            : (journey?.verifications || [])
+                .filter((log) => log.locationData)
+                .map((log) => ({
+                  ...log.locationData,
+                  id: log._id,
+                  label: log.product?.productName || journey?.product?.productName,
+                  severity: log.result === "AUTHENTIC" ? "LOW" : "HIGH",
+                  timestamp: log.createdAt,
+                })))}
         />
       </Panel>
     </DashboardPage>

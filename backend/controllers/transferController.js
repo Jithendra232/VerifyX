@@ -3,7 +3,7 @@ const Product = require("../models/Product");
 const Transfer = require("../models/Transfer");
 const User = require("../models/User");
 const { emitNotification } = require("../config/socket");
-const { sanitizeString } = require("../utils/validationUtils");
+const { sanitizeString, parseLocationPayload } = require("../utils/validationUtils");
 
 const TRANSFER_TYPES = [
   "MANUFACTURER_TO_DISTRIBUTOR",
@@ -58,7 +58,8 @@ const validateTransferFlow = ({ fromRole, toRole, transferType }) => {
 
 const transferProduct = async (req, res) => {
   try {
-    const { productId, toUserId, transferType, notes } = req.body;
+    const { productId, toUserId, transferType, notes, location } = req.body;
+    const storedLocation = parseLocationPayload(location);
 
     if (!productId || !toUserId || !transferType) {
       return res.status(400).json({
@@ -161,6 +162,7 @@ const transferProduct = async (req, res) => {
       transferType,
       status: "PENDING",
       notes: sanitizeString(notes, 300),
+      ...(storedLocation ? { location: storedLocation } : {}),
       statusHistory: [
         {
           status: "PENDING",
@@ -326,10 +328,14 @@ const acceptTransfer = async (req, res) => {
       });
     }
 
+    const acceptLocation = parseLocationPayload(req.body.location);
     const now = new Date();
     transfer.status = "COMPLETED";
     transfer.acceptedAt = now;
     transfer.completedAt = now;
+    if (acceptLocation) {
+      transfer.location = acceptLocation;
+    }
     transfer.statusHistory.push(
       { status: "ACCEPTED", changedBy: req.user._id, note: "Transfer accepted", changedAt: now },
       { status: "COMPLETED", changedBy: req.user._id, note: "Ownership updated", changedAt: now }

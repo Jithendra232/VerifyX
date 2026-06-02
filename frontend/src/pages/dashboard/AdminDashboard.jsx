@@ -3,6 +3,7 @@ import { useDashboard } from "../../hooks/useDashboard";
 import { fetchHighRiskProducts } from "../../services/riskService";
 import { useAuthSync } from "../../context/AuthSyncContext";
 import AnalyticsEnhancement from "../../components/dashboard/AnalyticsEnhancement";
+import DemoModePanel from "../../components/dashboard/DemoModePanel";
 import {
   DashboardAction,
   DashboardError,
@@ -98,6 +99,8 @@ function AdminDashboard() {
       />
 
       <AnalyticsEnhancement />
+
+      <DemoModePanel getToken={getToken} />
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
         <Panel title="Recent Platform Activity" subtitle="Latest operational events across the network.">

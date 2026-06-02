@@ -17,6 +17,7 @@ import {
   fetchTransfers,
   rejectTransferRequest,
 } from "../../services/transferService";
+import { getBrowserLocation } from "../../utils/geoLocation";
 
 const statusTone = {
   PENDING: "warning",
@@ -112,11 +113,13 @@ function TransferManagementPage() {
 
     try {
       setSubmitting(true);
+      const location = await getBrowserLocation();
       const response = await createTransferRequest(getToken, {
         productId,
         toUserId,
         transferType,
         notes,
+        ...(location ? { location } : {}),
       });
       setNotice(response.message || "Transfer request created.");
       setProductId("");
@@ -138,9 +141,10 @@ function TransferManagementPage() {
     setActionId(`${action}-${transferId}`);
 
     try {
+      const location = action === "accept" ? await getBrowserLocation() : null;
       const response =
         action === "accept"
-          ? await acceptTransferRequest(getToken, transferId)
+          ? await acceptTransferRequest(getToken, transferId, location ? { location } : {})
           : await rejectTransferRequest(getToken, transferId);
       setNotice(response.message || "Transfer updated.");
       await loadTransfers();

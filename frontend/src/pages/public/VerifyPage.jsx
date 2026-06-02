@@ -1,8 +1,10 @@
 import { useCallback, useRef, useState } from "react";
 import ToastStack from "../../components/common/ToastStack";
 import QrScanner from "../../components/scanner/QrScanner";
+import VerificationAssistantCard from "../../components/verification/VerificationAssistantCard";
 import { API_BASE_URL } from "../../config/api";
 import { saveVerificationRecord } from "../../utils/verificationHistory";
+import { getBrowserLocation } from "../../utils/geoLocation";
 
 function extractProductIdFromQr(rawValue) {
   const value = String(rawValue || "").trim();
@@ -31,27 +33,6 @@ function extractProductIdFromQr(rawValue) {
   }
 }
 
-function getBrowserLocation() {
-  if (!("geolocation" in navigator)) {
-    return Promise.resolve(null);
-  }
-
-  return new Promise((resolve) => {
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        resolve({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-          accuracy: position.coords.accuracy,
-          source: "browser",
-        });
-      },
-      () => resolve(null),
-      { enableHighAccuracy: false, maximumAge: 5 * 60 * 1000, timeout: 2500 }
-    );
-  });
-}
-
 function ResultCard({ result }) {
   if (!result) return null;
 
@@ -76,9 +57,11 @@ function ResultCard({ result }) {
           {suspicious ? "Review required" : "Verified"}
         </span>
       </div>
-      <pre className="mt-4 max-h-80 overflow-x-auto rounded-lg border border-white/70 bg-white/80 p-3 text-xs text-slate-700">
-        {JSON.stringify(result, null, 2)}
-      </pre>
+      {result.counterfeitAssessment ? (
+        <p className="mt-3 text-sm text-slate-700">
+          Assessment: <span className="font-semibold">{result.counterfeitAssessment.status}</span>
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -252,6 +235,11 @@ function VerifyPage() {
           </section>
 
           <ResultCard result={result} />
+          <VerificationAssistantCard
+            assistant={result?.assistant}
+            counterfeitAssessment={result?.counterfeitAssessment}
+            investigator={result?.investigator}
+          />
         </aside>
       </main>
     </div>

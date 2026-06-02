@@ -17,9 +17,10 @@ export const createTransferRequest = (getToken, payload) =>
     body: JSON.stringify(payload),
   });
 
-export const acceptTransferRequest = (getToken, transferId) =>
+export const acceptTransferRequest = (getToken, transferId, payload = {}) =>
   apiFetch(`/transfers/${transferId}/accept`, getToken, {
     method: "PATCH",
+    body: JSON.stringify(payload),
   });
 
 export const rejectTransferRequest = (getToken, transferId, reason = "") =>

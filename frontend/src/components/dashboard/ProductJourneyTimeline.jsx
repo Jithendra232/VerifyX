@@ -28,6 +28,9 @@ function ProductJourneyTimeline({ journey }) {
           <div className="rounded-lg border border-slate-200 bg-white p-4">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
+                {item.stage ? (
+                  <p className="text-xs font-semibold uppercase tracking-wide text-blue-600">{item.stage}</p>
+                ) : null}
                 <p className="font-semibold text-slate-950">{item.title || item.type}</p>
                 <p className="mt-1 text-sm text-slate-500">
                   {item.fromUser ? `${actorLabel(item.fromUser)} -> ${actorLabel(item.toUser)}` : actorLabel(item.owner)}

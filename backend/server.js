@@ -23,6 +23,8 @@ app.use("/api/transfers", require("./routes/transferRoutes"));
 app.use("/api/dashboard", require("./routes/dashboardRoutes"));
 app.use("/api/risk", require("./routes/riskRoutes"));
 app.use("/api/analytics", require("./routes/analyticsRoutes"));
+app.use("/api/intelligence", require("./routes/intelligenceRoutes"));
+app.use("/api/demo", require("./routes/demoRoutes"));
 app.get("/", (req, res) => {
   res.send("API Running...");
 });

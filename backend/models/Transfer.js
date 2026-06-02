@@ -36,6 +36,9 @@ const transferSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    location: {
+      type: String,
+    },
     statusHistory: [
       {
         status: {

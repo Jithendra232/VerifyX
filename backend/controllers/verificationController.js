@@ -9,6 +9,7 @@ const {
   getLogDisplayStatus,
 } = require("../utils/verificationHelpers");
 const { analyzeProductRisk } = require("../services/riskAnalysisService");
+const { analyzeProductIntelligence } = require("../services/supplyChainIntelligenceService");
 const { emitNotification } = require("../config/socket");
 const {
   parseLocationPayload,
@@ -115,10 +116,11 @@ const verifyProduct = async (req, res) => {
 
     const updatedProduct = await Product.findById(product._id);
 
-    // Get risk analysis (non-blocking, don't fail verification if it fails)
     let riskAnalysis = null;
+    let intelligence = null;
     try {
       riskAnalysis = await analyzeProductRisk(product._id);
+      intelligence = await analyzeProductIntelligence(product._id);
     } catch (riskError) {
       console.error("Risk analysis error (non-critical):", riskError.message);
     }
@@ -129,7 +131,6 @@ const verifyProduct = async (req, res) => {
       product: updatedProduct,
     };
 
-    // Include risk analysis if available
     if (riskAnalysis) {
       responsePayload.riskAnalysis = {
         riskScore: riskAnalysis.riskScore,
@@ -147,6 +148,18 @@ const verifyProduct = async (req, res) => {
           logId: log._id,
         });
       }
+    }
+
+    if (intelligence) {
+      responsePayload.counterfeitAssessment = {
+        status: intelligence.counterfeit.status,
+        code: intelligence.counterfeit.code,
+      };
+      responsePayload.assistant = intelligence.assistant;
+      responsePayload.investigator = {
+        summary: intelligence.investigator.summary,
+        findings: intelligence.investigator.findings,
+      };
     }
 
     emitNotification("verification", {

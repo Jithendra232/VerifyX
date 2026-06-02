@@ -4,9 +4,14 @@ const VerificationLog = require("../models/VerificationLog");
 const User = require("../models/User");
 const QRCode = require("qrcode");
 const { cloudinary, hasCloudinaryConfig } = require("../config/cloudinary");
-const { analyzeProductRisk } = require("../services/riskAnalysisService");
+const { analyzeProductIntelligence } = require("../services/supplyChainIntelligenceService");
 const { parseStoredLocation, sanitizeString } = require("../utils/validationUtils");
 const { getLogDisplayStatus } = require("../utils/verificationHelpers");
+const {
+  buildRouteChain,
+  buildMapPoints,
+  enrichTimeline,
+} = require("../utils/journeyUtils");
 
 const createProduct = async (req, res) => {
   try {
@@ -135,7 +140,7 @@ const getProductJourney = async (req, res) => {
       });
     }
 
-    const [transfers, logs, risk] = await Promise.all([
+    const [transfers, logs, intelligence] = await Promise.all([
       Transfer.find({ product: productId })
         .populate("fromUser", "name email role")
         .populate("toUser", "name email role")
@@ -146,46 +151,43 @@ const getProductJourney = async (req, res) => {
         .sort({ createdAt: -1 })
         .limit(25)
         .lean(),
-      analyzeProductRisk(productId).catch(() => null),
+      analyzeProductIntelligence(productId).catch(() => null),
     ]);
 
-    const timeline = [
-      {
-        id: `created-${product._id}`,
-        type: "CREATED",
-        title: "Product created",
-        actor: product.createdBy,
-        owner: product.createdBy,
-        createdAt: product.createdAt,
-        status: product.status,
-      },
-      ...transfers.map((transfer) => ({
-        id: transfer._id,
-        type: transfer.transferType,
-        title: "Ownership transferred",
-        actor: transfer.fromUser,
-        owner: transfer.toUser,
-        fromUser: transfer.fromUser,
-        toUser: transfer.toUser,
-        createdAt: transfer.createdAt,
-        status: transfer.status,
-        statusHistory: transfer.statusHistory,
-        notes: transfer.notes,
-      })),
-    ].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+    const verifications = logs.map((log) => ({
+      ...log,
+      status: getLogDisplayStatus(log),
+      locationData: parseStoredLocation(log.location),
+    }));
+
+    const timeline = enrichTimeline(product, transfers, verifications);
+    const routeChain = buildRouteChain(product, transfers);
+    const mapPoints = buildMapPoints({ transfers, verifications });
 
     return res.status(200).json({
       success: true,
       product,
       currentOwner: product.currentOwner,
       timeline,
-      transfers,
-      verifications: logs.map((log) => ({
-        ...log,
-        status: getLogDisplayStatus(log),
-        locationData: parseStoredLocation(log.location),
+      routeChain,
+      mapPoints,
+      transfers: transfers.map((transfer) => ({
+        ...transfer,
+        locationData: parseStoredLocation(transfer.location),
       })),
-      risk,
+      verifications,
+      risk: intelligence
+        ? {
+            productId: intelligence.productId,
+            productName: product.productName,
+            batchNumber: product.batchNumber,
+            riskScore: intelligence.riskScore,
+            riskLevel: intelligence.riskLevelCode,
+            reasons: intelligence.reasons,
+            signals: intelligence.signals,
+          }
+        : null,
+      intelligence,
     });
   } catch (error) {
     console.error("getProductJourney error:", error);

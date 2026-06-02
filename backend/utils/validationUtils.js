@@ -25,14 +25,24 @@ const parseLocationPayload = (location) => {
     return undefined;
   }
 
-  return JSON.stringify({
+  const payload = {
     lat,
     lng,
     accuracy: Number.isFinite(Number(location.accuracy))
       ? Number(location.accuracy)
       : undefined,
     source: sanitizeString(location.source || "browser", 40),
-  });
+  };
+
+  const city = sanitizeString(location.city, 80);
+  const state = sanitizeString(location.state, 80);
+  const country = sanitizeString(location.country, 80);
+
+  if (city) payload.city = city;
+  if (state) payload.state = state;
+  if (country) payload.country = country;
+
+  return JSON.stringify(payload);
 };
 
 const parseStoredLocation = (location) => {
@@ -49,6 +59,9 @@ const parseStoredLocation = (location) => {
         lng: Number(parsed.lng),
         accuracy: parsed.accuracy,
         source: parsed.source || "browser",
+        city: parsed.city || "",
+        state: parsed.state || "",
+        country: parsed.country || "",
       };
     }
   } catch {

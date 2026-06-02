@@ -9,6 +9,8 @@ const {
   uniqueReasons,
 } = require("../utils/riskHelpers");
 const { isValidObjectId } = require("../utils/objectIdUtils");
+const { analyzeRouteAnomalies } = require("./routeAnomalyService");
+const { buildRouteChain } = require("../utils/journeyUtils");
 
 /**
  * Analyze fake scan attempts from verification logs
@@ -225,13 +227,23 @@ const analyzeProductRisk = async (productId) => {
       throw new Error("Product not found");
     }
 
-    const [logs, ownerInconsistency, supplyChainSkipping] = await Promise.all([
+    const [logs, ownerInconsistency, supplyChainSkipping, transfers] = await Promise.all([
       VerificationLog.find({ product: productId })
         .sort({ createdAt: 1 })
         .lean(),
       analyzeOwnershipInconsistency(product),
       analyzeSupplyChainSkipping(productId),
+      Transfer.find({ product: productId })
+        .populate("fromUser toUser", "role")
+        .lean(),
     ]);
+
+    const routeChain = buildRouteChain(product, transfers);
+    const routeAnomaly = analyzeRouteAnomalies({
+      transfers,
+      verifications: logs,
+      routeChain,
+    });
 
     const fakeScanAnalysis = analyzeFakeScans(logs);
     const suspiciousStatusAnalysis = analyzeSuspiciousStatus(product);
@@ -265,6 +277,9 @@ const analyzeProductRisk = async (productId) => {
     totalScore += repeatedFakeQrAnalysis.score;
     if (repeatedFakeQrAnalysis.reason) reasons.push(repeatedFakeQrAnalysis.reason);
 
+    totalScore += routeAnomaly.score;
+    routeAnomaly.reasons.forEach((reason) => reasons.push(reason));
+
     totalScore = capRiskScore(totalScore);
     const riskLevel = calculateRiskLevel(totalScore);
     const uniqueReasonsList = uniqueReasons(reasons);
@@ -284,6 +299,7 @@ const analyzeProductRisk = async (productId) => {
         isSuspicious: product.verificationStatus === "suspicious",
         supplyChainSkipped: supplyChainSkipping.score > 0,
         ownershipInconsistent: ownerInconsistency.score > 0,
+        routeAnomalyScore: routeAnomaly.score,
       },
     };
   } catch (error) {
