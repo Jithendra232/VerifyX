@@ -1,8 +1,7 @@
 import { io } from "socket.io-client";
+import { API_ORIGIN_URL } from "../config/api";
 
-const SOCKET_URL =
-  import.meta.env.VITE_SOCKET_URL ||
-  "https://verifyxx.onrender.com";
+const SOCKET_URL = API_ORIGIN_URL;
 
 let socket;
 let activeKey;

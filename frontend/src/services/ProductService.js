@@ -1,4 +1,6 @@
-import.meta.env.VITE_API_URL
+import { API_BASE_URL } from "../config/api";
+
+const API_URL = `${API_BASE_URL}/products`;
 
 export const createProduct = async (productData) => {
   const response = await fetch(`${API_URL}/create`, {

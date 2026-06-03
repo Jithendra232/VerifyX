@@ -8,9 +8,15 @@ const { initSocket } = require("./config/socket");
 
 const app = express();
 const server = http.createServer(app);
+const isProduction = process.env.NODE_ENV === "production";
+const clientUrl =
+  process.env.CLIENT_URL ||
+  (isProduction
+    ? "https://verify-e2n4jjdke-jithendra-kumars-projects-3b533de6.vercel.app"
+    : "http://localhost:5173");
 connectDB();
 app.use(cors({
-  origin: process.env.CLIENT_URL || "http://localhost:5173",
+  origin: clientUrl,
   credentials: true,
 }));
 app.use(express.json({ limit: "1mb" }));

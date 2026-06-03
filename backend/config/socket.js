@@ -5,6 +5,13 @@ const { normalizeRole } = require("../utils/roleUtils");
 
 let io;
 
+const isProduction = process.env.NODE_ENV === "production";
+const clientUrl =
+  process.env.CLIENT_URL ||
+  (isProduction
+    ? "https://verify-e2n4jjdke-jithendra-kumars-projects-3b533de6.vercel.app"
+    : "http://localhost:5173");
+
 const authenticateSocket = async (socket, next) => {
   try {
     const token = socket.handshake.auth?.token;
@@ -45,7 +52,7 @@ const authenticateSocket = async (socket, next) => {
 const initSocket = (server) => {
   io = new Server(server, {
     cors: {
-      origin: process.env.CLIENT_URL || "http://localhost:5173",
+      origin: clientUrl,
       credentials: true,
     },
   });
