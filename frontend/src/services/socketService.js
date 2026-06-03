@@ -2,8 +2,7 @@ import { io } from "socket.io-client";
 
 const SOCKET_URL =
   import.meta.env.VITE_SOCKET_URL ||
-  import.meta.env.VITE_API_ORIGIN ||
-  "http://localhost:5000";
+  "https://verifyxx.onrender.com";
 
 let socket;
 let activeKey;
