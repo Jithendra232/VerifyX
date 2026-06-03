@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:5000/api/products";
+import.meta.env.VITE_API_URL
 
 export const createProduct = async (productData) => {
   const response = await fetch(`${API_URL}/create`, {
